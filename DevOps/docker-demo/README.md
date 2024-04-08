@@ -19,6 +19,7 @@
 ## 运行镜像
 
 1. `docker run -p 8000:8000 fastapi-hello-world`
+
    > 此处踩了一个巨坑, 关于`WSL2`的, 解决方案:[参考链接](https://superuser.com/questions/1714002/wsl2-connect-to-host-without-disabling-the-windows-firewall)
 2. 浏览器访问`http://localhost:8000/docs` 即可
 
@@ -102,6 +103,80 @@
 
    - `P90`为 `26ms`, 即 90% 请求都可以在 26ms时完成
    - `QPS`为 4040.09, 即 一秒钟最大请求数为4040.09
+
+3. 测试`docker`中的性能情况
+
+   ```bash
+   docker run -p 8000:8000 fastapi-hello-world
+   ab -n 1000 -c 100 http://localhost:8000/  # 同样的情况
+   ```
+
+   输出数据如下:
+
+   ```bash
+   This is ApacheBench, Version 2.3 <$Revision: 1879490 $>
+   Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+   Licensed to The Apache Software Foundation, http://www.apache.org/
+   
+   Benchmarking localhost (be patient)
+   Completed 100 requests
+   Completed 200 requests
+   Completed 300 requests
+   Completed 400 requests
+   Completed 500 requests
+   Completed 600 requests
+   Completed 700 requests
+   Completed 800 requests
+   Completed 900 requests
+   Completed 1000 requests
+   Finished 1000 requests
+   
+   
+   Server Software:        uvicorn
+   Server Hostname:        localhost
+   Server Port:            8000
+   
+   Document Path:          /
+   Document Length:        25 bytes
+   
+   Concurrency Level:      100
+   Time taken for tests:   0.471 seconds
+   Complete requests:      1000
+   Failed requests:        0
+   Total transferred:      150000 bytes
+   HTML transferred:       25000 bytes
+   Requests per second:    2122.58 [#/sec] (mean)
+   Time per request:       47.113 [ms] (mean)
+   Time per request:       0.471 [ms] (mean, across all concurrent requests)
+   Transfer rate:          310.92 [Kbytes/sec] received
+   
+   Connection Times (ms)
+                 min  mean[+/-sd] median   max
+   Connect:        0    0   0.4      0       2
+   Processing:     3   45  26.5     39     137
+   Waiting:        1   45  26.5     39     137
+   Total:          3   45  26.6     39     138
+   
+   Percentage of the requests served within a certain time (ms)
+     50%     39
+     66%     40
+     75%     40
+     80%     40
+     90%     65
+     95%    127
+     98%    129
+     99%    130
+    100%    138 (longest request)
+   ```
+
+   可以得出主要的结论:
+
+   - `P90`为 `65ms`, 即 90% 请求都可以在 65ms时完成
+   - `QPS`为 2122, 即 一秒钟最大请求数为2122
+
+   ---
+
+   可见在`docker` 容器中运行性能损失蛮大的.
 
 
 
