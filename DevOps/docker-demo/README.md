@@ -178,7 +178,45 @@
 
    可见在`docker` 容器中运行性能损失蛮大的.
 
+# Docker命令
 
+- `docker inspect {image-name}` 反射镜像的信息
 
 # Redis
+
+拉取redis-docker镜像:
+
+```bash
+docker pull redis
+```
+
+安装Redis客户端工具
+
+```bash
+sudo apt-get install redis-tools
+```
+
+启动redis:
+
+```bash
+docker run --name my-redis -p 6379:6379 redis
+```
+
+- `--name my-redis`：为容器指定一个名称，这里使用`my-redis`作为示例。
+- `-p 6379:6379`：将主机的`6379`端口映射到容器的`6379`端口，这是Redis默认的端口。
+- `-d`：在后台运行容器。
+- `redis`：指定要使用的Redis镜像。
+
+使用Redis客户端工具, 验证我们的服务已经正常启动:
+```bash
+redis-cli -h localhost -p 6379
+
+SET mykey "Hello, Redis!"
+GET mykey
+# 会输出 "Hello, Redis!"
+```
+
+
+
+python安装第三方库`poetry add aioredis`
 

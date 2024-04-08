@@ -8,6 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 fastapi = {extras = ["all"], version = "^0.110.1"}
+aioredis = "^2.0.1"
 
 
 [tool.poetry.group.dev.dependencies]
