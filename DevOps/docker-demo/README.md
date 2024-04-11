@@ -178,9 +178,7 @@
 
    可见在`docker` 容器中运行性能损失蛮大的.
 
-# Docker命令
 
-- `docker inspect {image-name}` 反射镜像的信息
 
 # Redis
 
@@ -199,7 +197,7 @@ sudo apt-get install redis-tools
 启动redis:
 
 ```bash
-docker run --name my-redis -p 6379:6379 redis
+docker run --name redis-for-fastapi -p 6379:6379 redis
 ```
 
 - `--name my-redis`：为容器指定一个名称，这里使用`my-redis`作为示例。
@@ -218,5 +216,34 @@ GET mykey
 
 
 
-python安装第三方库`poetry add aioredis`
+# 两个Docker互相访问
 
+1. python安装第三方库`poetry add aioredis`
+
+2. 在`fastapi`的`lifespan`中使用`aioredis`连接`redis`: 
+
+   ```python
+   aioredis.from_url(_url)
+   ```
+
+   
+
+3. 因为`redis`的`image`和`fastapi`的`image`是各自独立的, 所以`fastapi`的`localhost:6379` 命令并不能访问到`docker`, 为了解决此问题我们需要使用`docker network`命令
+
+   ```bash
+   docker network create for-fastapi  # {for-fastapi} 为我们创建的虚拟网络名称
+   
+   # 启动镜像的时候都要加上 --network, (命令参数都不能放在{镜像名}后面)
+   docker run --network for-fastapi --name my-redis -p 6379:6379 redis
+   # {my-redis:6379} 就是上一条命令的 redis地址
+   docker run -e REDIS_URL=redis://my-redis:6379 --network for-fastapi -p 8000:8000 fastapi-hello-world
+   ```
+
+   > - `-e` 参数会在启动时传入环境变量
+
+
+
+# Docker命令
+
+- `docker inspect {image-name}` 反射镜像的信息
+- `docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' XXXXX` 获取容器的`IP`
