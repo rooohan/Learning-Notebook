@@ -241,6 +241,153 @@ GET mykey
 
    > - `-e` 参数会在启动时传入环境变量
 
+# Nginx代理
+
+1. `docker pull nginx`
+
+2. 写一个`nginx.conf`文件:
+
+   ```python
+   events {
+       worker_connections 1024;
+   }
+   
+   http {
+       server {
+           listen 80;
+           server_name localhost;
+   
+           location / {
+               proxy_pass http://fast-api-sever:8000;
+               proxy_set_header Host $host;
+               proxy_set_header X-Real-IP $remote_addr;
+               proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+               proxy_set_header X-Forwarded-Proto $scheme;
+           }
+       }
+   }
+   ```
+
+   > - worker_connections
+   >
+   >   定义了每个工作进程的最大连接数
+   >
+   > - listen 和 server_name
+   >
+   >   这是我们访问`Nginx`的新地址
+   >
+   > - proxy_pass
+   >
+   >   这里一定要注意, `fast-api-sever`是后面我们后端服务起`docker`的时候的`name`
+
+3. 运行后端服务:
+
+   ```bash
+   docker run --name fast-api-sever -e REDIS_URL=redis://my-redis:6379 --network for-fastapi -p 8000:8000 fastapi-hello-world
+   ```
+
+   > --name 与`Nginx`文件中`proxy_pass`对应
+
+4. 启动`Nginx` 容器:
+
+   ```bash
+   docker run --network for-fastapi --name nginx-proxy -p 80:80 -v /home/neo/project/Learning-Notebook/DevOps/docker-demo/devops/nginx.conf:/etc/nginx/nginx.conf:ro nginx
+   ```
+
+   > 注意:
+   >
+   > 这里`/home/neo/project/Learning-Notebook/DevOps/docker-demo/devops/nginx.conf`要求是绝对路径, 大家练习的时候要替换成自己的路径
+
+5. 访问新的反向代理的地址:`http://localhost:80/`
+
+6. 性能测试:
+
+   直接出结论, 这么轻的服务,`Nginx` P90性能提升30% 牛
+
+   - 直接访问`docker`的压测`ab -n 1000 -c 100 http://localhost:8000/`
+
+     ```bash
+     Server Software:        uvicorn
+     Server Hostname:        localhost
+     Server Port:            8000
+     
+     Document Path:          /
+     Document Length:        25 bytes
+     
+     Concurrency Level:      100
+     Time taken for tests:   0.512 seconds
+     Complete requests:      1000
+     Failed requests:        0
+     Total transferred:      150000 bytes
+     HTML transferred:       25000 bytes
+     Requests per second:    1954.45 [#/sec] (mean)
+     Time per request:       51.165 [ms] (mean)
+     Time per request:       0.512 [ms] (mean, across all concurrent requests)
+     Transfer rate:          286.30 [Kbytes/sec] received
+     
+     Connection Times (ms)
+                   min  mean[+/-sd] median   max
+     Connect:        0    0   0.4      0       2
+     Processing:     4   49  27.0     42     137
+     Waiting:        2   49  26.9     42     137
+     Total:          4   49  27.0     42     139
+     
+     Percentage of the requests served within a certain time (ms)
+       50%     42
+       66%     43
+       75%     44
+       80%     45
+       90%     71
+       95%    133
+       98%    137
+       99%    138
+      100%    139 (longest request)
+     ```
+
+   - 访问`Nginx`的压测: `ab -n 1000 -c 100 http://localhost:80/`
+
+     ```bash
+     Server Software:        nginx/1.25.4
+     Server Hostname:        localhost
+     Server Port:            80
+     
+     Document Path:          /
+     Document Length:        25 bytes
+     
+     Concurrency Level:      100
+     Time taken for tests:   0.477 seconds
+     Complete requests:      1000
+     Failed requests:        0
+     Total transferred:      174000 bytes
+     HTML transferred:       25000 bytes
+     Requests per second:    2094.55 [#/sec] (mean)
+     Time per request:       47.743 [ms] (mean)
+     Time per request:       0.477 [ms] (mean, across all concurrent requests)
+     Transfer rate:          355.91 [Kbytes/sec] received
+     
+     Connection Times (ms)
+                   min  mean[+/-sd] median   max
+     Connect:        0    0   0.3      0       2
+     Processing:     3   45   7.9     47      51
+     Waiting:        2   45   7.9     47      51
+     Total:          3   45   7.6     47      51
+     
+     Percentage of the requests served within a certain time (ms)
+       50%     47
+       66%     48
+       75%     49
+       80%     49
+       90%     49
+       95%     50
+       98%     50
+       99%     51
+      100%     51 (longest request)
+     ```
+
+     
+
+
+
 
 
 # Docker命令
