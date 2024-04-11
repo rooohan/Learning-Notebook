@@ -245,5 +245,35 @@ GET mykey
 
 # Docker命令
 
+## 反射
+
 - `docker inspect {image-name}` 反射镜像的信息
 - `docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' XXXXX` 获取容器的`IP`
+- `docker inspect --format='{{range .Mounts}}{{.Destination}}{{"\n"}}{{end}}' xxxxxxx` 反射挂载路径
+
+
+
+### VOLUME
+
+Docker Volume 是 Docker 中用于持久化存储数据的一种机制。它允许容器在不受容器生命周期影响的情况下访问和共享数据。
+
+所以我们做测试的时候写进redis的内容,其实都挂载进了我们的`WSL`中. 为此我们要删除它们
+
+```bash
+docker volume ls
+```
+
+> DRIVER    VOLUME NAME
+> local     6c7c715835c2f6e0e5c91488cd514b1d2344c0aa82b1074866e8697c4613f5e9
+> local     53a085553e581fad32bf54ddbd828d5efb9b94bb0b1054704015b472b5aceb64
+>
+> ---
+>
+> VOLUME NAME 与我们使用`docker inspect`反射`Mounts` 挂载的值一致
+
+```bash
+ # 请确保容器都安全退出, 且没有重要数据再删除
+ # 本教程无产生隐私数据, 随便删
+ docker volume rm XXXXXXX
+```
+
