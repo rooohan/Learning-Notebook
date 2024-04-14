@@ -13,7 +13,7 @@
    git config --global user.email "your.email@example.com"
    ```
 
-   按照教程，在本地电脑上[配置SSH密钥](https://docs.github.com/zh/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)，并将[密钥添加到Github账户](https://docs.github.com/zh/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account#adding-a-new-ssh-key-to-your-account). 
+   按照教程，在本地电脑上[配置SSH密钥](https://docs.github.com/zh/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)，并将[密钥添加到Github账户](https://docs.github.com/zh/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account#adding-a-new-ssh-key-to-your-account).
 
    > 此处笔者踩了一个小坑，是代理22的问题， 解决方案如下：
    >
@@ -50,7 +50,20 @@
    poetry completions bash >> ~/.bash_completion # 可选 代码补全
    ```
 
-2. 
+2. 安装[pre-commit](https://pre-commit.com/)
 
+   ```bash
+   pipx install pre-commit
+   ```
 
+   在项目中集成`pre-commit`:
 
+   ```bash
+   poetry add pre-commit --group dev
+   ```
+
+   右键新建文件`.pre-commit-config.yaml`, 运行`pre-commit sample-config` 并将内容复制到`.pre-commit-config.yaml`
+
+   ```bash
+   pre-commit install
+   ```

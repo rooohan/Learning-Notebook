@@ -47,7 +47,7 @@
    This is ApacheBench, Version 2.3 <$Revision: 1879490 $>
    Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
    Licensed to The Apache Software Foundation, http://www.apache.org/
-   
+
    Benchmarking localhost (be patient)
    Completed 100 requests
    Completed 200 requests
@@ -60,15 +60,15 @@
    Completed 900 requests
    Completed 1000 requests
    Finished 1000 requests
-   
-   
+
+
    Server Software:        uvicorn
    Server Hostname:        localhost
    Server Port:            8000
-   
+
    Document Path:          /
    Document Length:        25 bytes
-   
+
    Concurrency Level:      100
    Time taken for tests:   0.248 seconds
    Complete requests:      1000
@@ -79,14 +79,14 @@
    Time per request:       24.752 [ms] (mean)
    Time per request:       0.248 [ms] (mean, across all concurrent requests)
    Transfer rate:          591.81 [Kbytes/sec] received
-   
+
    Connection Times (ms)
                  min  mean[+/-sd] median   max
    Connect:        0    0   0.2      0       1
    Processing:     1   23   4.7     25      27
    Waiting:        1   23   4.8     25      27
    Total:          2   23   4.5     25      27
-   
+
    Percentage of the requests served within a certain time (ms)
      50%     25
      66%     25
@@ -117,7 +117,7 @@
    This is ApacheBench, Version 2.3 <$Revision: 1879490 $>
    Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
    Licensed to The Apache Software Foundation, http://www.apache.org/
-   
+
    Benchmarking localhost (be patient)
    Completed 100 requests
    Completed 200 requests
@@ -130,15 +130,15 @@
    Completed 900 requests
    Completed 1000 requests
    Finished 1000 requests
-   
-   
+
+
    Server Software:        uvicorn
    Server Hostname:        localhost
    Server Port:            8000
-   
+
    Document Path:          /
    Document Length:        25 bytes
-   
+
    Concurrency Level:      100
    Time taken for tests:   0.471 seconds
    Complete requests:      1000
@@ -149,14 +149,14 @@
    Time per request:       47.113 [ms] (mean)
    Time per request:       0.471 [ms] (mean, across all concurrent requests)
    Transfer rate:          310.92 [Kbytes/sec] received
-   
+
    Connection Times (ms)
                  min  mean[+/-sd] median   max
    Connect:        0    0   0.4      0       2
    Processing:     3   45  26.5     39     137
    Waiting:        1   45  26.5     39     137
    Total:          3   45  26.6     39     138
-   
+
    Percentage of the requests served within a certain time (ms)
      50%     39
      66%     40
@@ -220,19 +220,19 @@ GET mykey
 
 1. python安装第三方库`poetry add aioredis`
 
-2. 在`fastapi`的`lifespan`中使用`aioredis`连接`redis`: 
+2. 在`fastapi`的`lifespan`中使用`aioredis`连接`redis`:
 
    ```python
    aioredis.from_url(_url)
    ```
 
-   
+
 
 3. 因为`redis`的`image`和`fastapi`的`image`是各自独立的, 所以`fastapi`的`localhost:6379` 命令并不能访问到`docker`, 为了解决此问题我们需要使用`docker network`命令
 
    ```bash
    docker network create for-fastapi  # {for-fastapi} 为我们创建的虚拟网络名称
-   
+
    # 启动镜像的时候都要加上 --network, (命令参数都不能放在{镜像名}后面)
    docker run --network for-fastapi --name redis-for-fastapi -p 6379:6379 redis
    # {redis-for-fastapi:6379} 就是上一条命令的 redis地址
@@ -251,12 +251,12 @@ GET mykey
    events {
        worker_connections 1024;
    }
-   
+
    http {
        server {
            listen 80;
            server_name localhost;
-   
+
            location / {
                proxy_pass http://fast-api-server:8000;
                proxy_set_header Host $host;
@@ -310,10 +310,10 @@ GET mykey
      Server Software:        uvicorn
      Server Hostname:        localhost
      Server Port:            8000
-     
+
      Document Path:          /
      Document Length:        25 bytes
-     
+
      Concurrency Level:      100
      Time taken for tests:   0.512 seconds
      Complete requests:      1000
@@ -324,14 +324,14 @@ GET mykey
      Time per request:       51.165 [ms] (mean)
      Time per request:       0.512 [ms] (mean, across all concurrent requests)
      Transfer rate:          286.30 [Kbytes/sec] received
-     
+
      Connection Times (ms)
                    min  mean[+/-sd] median   max
      Connect:        0    0   0.4      0       2
      Processing:     4   49  27.0     42     137
      Waiting:        2   49  26.9     42     137
      Total:          4   49  27.0     42     139
-     
+
      Percentage of the requests served within a certain time (ms)
        50%     42
        66%     43
@@ -350,10 +350,10 @@ GET mykey
      Server Software:        nginx/1.25.4
      Server Hostname:        localhost
      Server Port:            80
-     
+
      Document Path:          /
      Document Length:        25 bytes
-     
+
      Concurrency Level:      100
      Time taken for tests:   0.477 seconds
      Complete requests:      1000
@@ -364,14 +364,14 @@ GET mykey
      Time per request:       47.743 [ms] (mean)
      Time per request:       0.477 [ms] (mean, across all concurrent requests)
      Transfer rate:          355.91 [Kbytes/sec] received
-     
+
      Connection Times (ms)
                    min  mean[+/-sd] median   max
      Connect:        0    0   0.3      0       2
      Processing:     3   45   7.9     47      51
      Waiting:        2   45   7.9     47      51
      Total:          3   45   7.6     47      51
-     
+
      Percentage of the requests served within a certain time (ms)
        50%     47
        66%     48
@@ -383,8 +383,6 @@ GET mykey
        99%     51
       100%     51 (longest request)
      ```
-
-     
 
 
 
@@ -400,10 +398,10 @@ GET mykey
 
    ```yaml
    version: '3'
-   
+
    networks:
      for-fastapi:
-   
+
    services:
      fast-api-server:
        image: fastapi-docker-image:latest
@@ -419,7 +417,7 @@ GET mykey
          - for-fastapi
        depends_on:
          - redis
-   
+
      redis:
        image: redis:latest
        container_name: redis-for-fastapi
@@ -427,8 +425,8 @@ GET mykey
          - for-fastapi
        ports:
          - "6379:6379"
-   
-   
+
+
      nginx:
        image: nginx:latest
        ports:
@@ -439,8 +437,8 @@ GET mykey
          - for-fastapi
        depends_on:
          - fast-api-server
-   
-   
+
+
    ```
 
    - version: 代表了`docker-compose` 的版本
@@ -452,7 +450,7 @@ GET mykey
    docker-compose -f ./devops/docker-compose.yml up
    ```
 
-   
+
 
 3. 停止全部docker
 
@@ -460,9 +458,9 @@ GET mykey
    docker-compose -f devops/docker-compose.yml down
    ```
 
-   
 
-   
+
+
 
 
 
@@ -501,4 +499,3 @@ docker volume ls
  # 本教程无产生隐私数据, 随便删
  docker volume rm XXXXXXX
 ```
-
