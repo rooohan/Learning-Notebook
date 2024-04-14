@@ -388,6 +388,77 @@ GET mykey
 
 
 
+# Docker Compose
+
+随着'业务'的发展, 我们当前的DEMO也开始变得复杂起来, 不论是后端启动的时候需要注入`redis`的地址, 以及在nginx中配置`proxy_pass`对应的后端地址. 此时就需要Docker Compose 登场了.
+
+`Docker Compose` 通过一个单一文件来描述应用程序的组件，包括容器、网络设置、数据卷等，并使用简单的命令来启动、停止和管理这些组件。
+
+1. `docker-compose.yml`
+
+   在`./devops`文件夹下新建`docker-compose.yml`:
+
+   ```yaml
+   version: '3'
+   
+   networks:
+     for-fastapi:
+   
+   services:
+     nginx:
+       image: nginx:latest
+       ports:
+         - "80:80"
+       volumes:
+         - ./nginx.conf:/etc/nginx/nginx.conf
+       networks:
+         - for-fastapi
+       depends_on:
+         - fast-api-server
+   
+     fast-api-server:
+       image: fastapi-hello-world:latest
+       build: .
+       container_name: fast-api-server
+       environment:
+         - REDIS_URL=redis://my-redis:6379
+       ports:
+         - "8000:8000"
+       networks:
+         - for-fastapi
+       depends_on:
+         - redis
+   
+     redis:
+       image: redis:latest
+       container_name: my-redis
+       networks:
+         - for-fastapi
+       ports:
+         - "6379:6379"
+   
+   ```
+
+2. 运行命令
+
+   ```bash
+   docker-compose -f ./devops/docker-compose.yml up
+   ```
+
+   
+
+3. 停止全部docker
+
+   ```bash
+   docker-compose -f devops/docker-compose.yml down
+   ```
+
+   
+
+   
+
+
+
 
 
 # Docker命令
