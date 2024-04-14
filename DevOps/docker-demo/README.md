@@ -7,10 +7,10 @@
 ## Dockerfile实现
 1. 在项目根目录下新建`devops`文件夹, 并新建`Dockerfile`文件(一般建议在根目录下直接建文件就好).
 2. 在`Dockerfile`文件中, 编写要构建镜像的命令
-3. 在项目根目录下运行: `docker build -t fastapi-hello-world -f devops/Dockerfile .`
+3. 在项目根目录下运行: `docker build -t fastapi-docker-image -f devops/Dockerfile .`
    > 注意:
    >
-   > 1. 此处`fastapi-hello-world` 即为你想构建的镜像的名字
+   > 1. 此处`fastapi-docker-image` 即为你想构建的镜像的名字
    > 2. `-f` 指定了`Dockerfile`文件 所在的路径
    > 3. `.` 指定了Docker引擎用来查找和读取构建上下文中的文件的路径, 即此处为根目录
 4.  运行`docker image ls` 即可看到自己刚构建成功的镜像
@@ -18,7 +18,7 @@
 
 ## 运行镜像
 
-1. `docker run -p 8000:8000 fastapi-hello-world`
+1. `docker run -p 8000:8000 fastapi-docker-image`
 
    > 此处踩了一个巨坑, 关于`WSL2`的, 解决方案:[参考链接](https://superuser.com/questions/1714002/wsl2-connect-to-host-without-disabling-the-windows-firewall)
 2. 浏览器访问`http://localhost:8000/docs` 即可
@@ -107,7 +107,7 @@
 3. 测试`docker`中的性能情况
 
    ```bash
-   docker run -p 8000:8000 fastapi-hello-world
+   docker run -p 8000:8000 fastapi-docker-image
    ab -n 1000 -c 100 http://localhost:8000/  # 同样的情况
    ```
 
@@ -200,7 +200,7 @@ sudo apt-get install redis-tools
 docker run --name redis-for-fastapi -p 6379:6379 redis
 ```
 
-- `--name my-redis`：为容器指定一个名称，这里使用`my-redis`作为示例。
+- `--name redis-for-fastapi`：为容器指定一个名称，这里使用`redis-for-fastapi`作为示例。
 - `-p 6379:6379`：将主机的`6379`端口映射到容器的`6379`端口，这是Redis默认的端口。
 - `-d`：在后台运行容器。
 - `redis`：指定要使用的Redis镜像。
@@ -234,9 +234,9 @@ GET mykey
    docker network create for-fastapi  # {for-fastapi} 为我们创建的虚拟网络名称
    
    # 启动镜像的时候都要加上 --network, (命令参数都不能放在{镜像名}后面)
-   docker run --network for-fastapi --name my-redis -p 6379:6379 redis
-   # {my-redis:6379} 就是上一条命令的 redis地址
-   docker run -e REDIS_URL=redis://my-redis:6379 --network for-fastapi -p 8000:8000 fastapi-hello-world
+   docker run --network for-fastapi --name redis-for-fastapi -p 6379:6379 redis
+   # {redis-for-fastapi:6379} 就是上一条命令的 redis地址
+   docker run -e REDIS_URL=redis://redis-for-fastapi:6379 --network for-fastapi -p 8000:8000 fastapi-docker-image
    ```
 
    > - `-e` 参数会在启动时传入环境变量
@@ -258,7 +258,7 @@ GET mykey
            server_name localhost;
    
            location / {
-               proxy_pass http://fast-api-sever:8000;
+               proxy_pass http://fast-api-server:8000;
                proxy_set_header Host $host;
                proxy_set_header X-Real-IP $remote_addr;
                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -278,12 +278,12 @@ GET mykey
    >
    > - proxy_pass
    >
-   >   这里一定要注意, `fast-api-sever`是后面我们后端服务起`docker`的时候的`name`
+   >   这里一定要注意, `fast-api-server`是后面我们后端服务起`docker`的时候的`name`
 
 3. 运行后端服务:
 
    ```bash
-   docker run --name fast-api-sever -e REDIS_URL=redis://my-redis:6379 --network for-fastapi -p 8000:8000 fastapi-hello-world
+   docker run --name fast-api-server -e REDIS_URL=redis://redis-for-fastapi:6379 --network for-fastapi -p 8000:8000 fastapi-docker-image
    ```
 
    > --name 与`Nginx`文件中`proxy_pass`对应
@@ -405,23 +405,14 @@ GET mykey
      for-fastapi:
    
    services:
-     nginx:
-       image: nginx:latest
-       ports:
-         - "80:80"
-       volumes:
-         - ./nginx.conf:/etc/nginx/nginx.conf
-       networks:
-         - for-fastapi
-       depends_on:
-         - fast-api-server
-   
      fast-api-server:
-       image: fastapi-hello-world:latest
-       build: .
-       container_name: fast-api-server
+       image: fastapi-docker-image:latest
+       build:  # 如果没有{image}就build, 有就直接使用
+         context: ..  # 以当前目录的上上层作为上下文路径
+         dockerfile: devops/Dockerfile
+       container_name: fast-api-server  # 与nginx.conf文件中的proxy_pass保持一致
        environment:
-         - REDIS_URL=redis://my-redis:6379
+         - REDIS_URL=redis://redis-for-fastapi:6379
        ports:
          - "8000:8000"
        networks:
@@ -431,13 +422,29 @@ GET mykey
    
      redis:
        image: redis:latest
-       container_name: my-redis
+       container_name: redis-for-fastapi
        networks:
          - for-fastapi
        ports:
          - "6379:6379"
    
+   
+     nginx:
+       image: nginx:latest
+       ports:
+         - "80:80"
+       volumes:
+         - ./nginx.conf:/etc/nginx/nginx.conf  # 此处可以相对路径了
+       networks:
+         - for-fastapi
+       depends_on:
+         - fast-api-server
+   
+   
    ```
+
+   - version: 代表了`docker-compose` 的版本
+   - networks: 下面所有`services` 都会使用的网络组,保证在同一个网络内
 
 2. 运行命令
 
