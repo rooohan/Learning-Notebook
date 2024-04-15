@@ -174,7 +174,7 @@
    - `P90`为 `65ms`, 即 90% 请求都可以在 65ms时完成
    - `QPS`为 2122, 即 一秒钟最大请求数为2122
 
-   ---
+---
 
    可见在`docker` 容器中运行性能损失蛮大的.
 
@@ -399,16 +399,16 @@ GET mykey
    ```yaml
    version: '3'
 
-   networks:
+   networks:  # 实测是需要写一个networks的
      for-fastapi:
 
    services:
      fast-api-server:
        image: fastapi-docker-image:latest
-       build:  # 如果没有{image}就build, 有就直接使用
-         context: ..  # 以当前目录的上上层作为上下文路径
+       build:                              # 如果没有{image}就build, 有就直接使用
+         context: ..                       # 以当前目录的上上层作为上下文路径
          dockerfile: devops/Dockerfile
-       container_name: fast-api-server  # 与nginx.conf文件中的proxy_pass保持一致
+       container_name: fast-api-server     # 与nginx.conf文件中的proxy_pass保持一致
        environment:
          - REDIS_URL=redis://redis-for-fastapi:6379
        ports:
@@ -439,18 +439,10 @@ GET mykey
          - fast-api-server
 
 
-   ```
-
-   - version: 代表了`docker-compose` 的版本
-   - networks: 下面所有`services` 都会使用的网络组,保证在同一个网络内
-
 2. 运行命令
 
    ```bash
    docker-compose -f ./devops/docker-compose.yml up
-   ```
-
-
 
 3. 停止全部docker
 
