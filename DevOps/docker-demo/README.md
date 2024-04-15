@@ -47,7 +47,7 @@
    This is ApacheBench, Version 2.3 <$Revision: 1879490 $>
    Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
    Licensed to The Apache Software Foundation, http://www.apache.org/
-
+   
    Benchmarking localhost (be patient)
    Completed 100 requests
    Completed 200 requests
@@ -232,7 +232,7 @@ GET mykey
 
    ```bash
    docker network create for-fastapi  # {for-fastapi} 为我们创建的虚拟网络名称
-
+   
    # 启动镜像的时候都要加上 --network, (命令参数都不能放在{镜像名}后面)
    docker run --network for-fastapi --name redis-for-fastapi -p 6379:6379 redis
    # {redis-for-fastapi:6379} 就是上一条命令的 redis地址
@@ -350,10 +350,10 @@ GET mykey
      Server Software:        nginx/1.25.4
      Server Hostname:        localhost
      Server Port:            80
-
+     
      Document Path:          /
      Document Length:        25 bytes
-
+     
      Concurrency Level:      100
      Time taken for tests:   0.477 seconds
      Complete requests:      1000
@@ -364,14 +364,14 @@ GET mykey
      Time per request:       47.743 [ms] (mean)
      Time per request:       0.477 [ms] (mean, across all concurrent requests)
      Transfer rate:          355.91 [Kbytes/sec] received
-
+     
      Connection Times (ms)
                    min  mean[+/-sd] median   max
      Connect:        0    0   0.3      0       2
      Processing:     3   45   7.9     47      51
      Waiting:        2   45   7.9     47      51
      Total:          3   45   7.6     47      51
-
+     
      Percentage of the requests served within a certain time (ms)
        50%     47
        66%     48
@@ -398,10 +398,10 @@ GET mykey
 
    ```yaml
    version: '3'
-
+   
    networks:  # 实测是需要写一个networks的
      for-fastapi:
-
+   
    services:
      fast-api-server:
        image: fastapi-docker-image:latest
@@ -417,7 +417,7 @@ GET mykey
          - for-fastapi
        depends_on:
          - redis
-
+   
      redis:
        image: redis:latest
        container_name: redis-for-fastapi
@@ -425,8 +425,8 @@ GET mykey
          - for-fastapi
        ports:
          - "6379:6379"
-
-
+   
+   
      nginx:
        image: nginx:latest
        ports:
@@ -437,7 +437,7 @@ GET mykey
          - for-fastapi
        depends_on:
          - fast-api-server
-
+   
 
 2. 运行命令
 
@@ -449,6 +449,151 @@ GET mykey
    ```bash
    docker-compose -f devops/docker-compose.yml down
    ```
+
+
+
+# K8S
+
+>  接下来来到本次`docker`练习的最后阶段了, 我们将使用`K8S`,.在本次练习中我们将使用:
+>
+> - `Minikube`启动一个轻量级的Kubernetes集群.
+> - `kubectl`作为K8S的命令行工具, 与集群交互.
+
+[**Minikube**](https://minikube.sigs.k8s.io/docs/)是一个轻量级的开源工具，使开发人员能够在自己的机器上本地运行和测试 Kubernetes 集群。
+
+它提供了一种简单易用的方法来**试验**和**测试**Kubernetes，而无需完整的生产环境。
+
+## 环境安装
+
+### 安装minikube
+
+参考链接: https://minikube.sigs.k8s.io/docs/start/
+
+```bash
+# 请以官网的最新步骤为主
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+
+sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+```
+
+运行`minikube`
+
+```bash
+minikube start
+```
+
+> 😄  minikube v1.32.0 on Ubuntu 22.04 (amd64)
+> ✨  Automatically selected the docker driver. Other choices: none, ssh
+> 📌  Using Docker driver with root privileges
+> ❗  For an improved experience it's recommended to use Docker Engine instead of Docker Desktop.
+> Docker Engine installation instructions: https://docs.docker.com/engine/install/#server
+> 👍  Starting control plane node minikube in cluster minikube
+> 🚜  Pulling base image ...
+> 💾  Downloading Kubernetes v1.28.3 preload ...
+>     > preloaded-images-k8s-v18-v1...:  403.35 MiB / 403.35 MiB  100.00% 13.39 M
+>     > gcr.io/k8s-minikube/kicbase...:  453.90 MiB / 453.90 MiB  100.00% 10.61 M
+> 🔥  Creating docker container (CPUs=2, Memory=3400MB) ...
+> 🐳  Preparing Kubernetes v1.28.3 on Docker 24.0.7 ...
+>     ▪ Generating certificates and keys ...
+>     ▪ Booting up control plane ...
+>     ▪ Configuring RBAC rules ...
+> 🔗  Configuring bridge CNI (Container Networking Interface) ...
+> 🔎  Verifying Kubernetes components...
+>     ▪ Using image gcr.io/k8s-minikube/storage-provisioner:v5
+> 🌟  Enabled addons: storage-provisioner, default-storageclass
+> 🏄  Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
+
+### 安装kubectl
+
+> 使用`snap`是因为apt包管理器中没有kubectl, 笔者WSL2安装完成后默认就有`snap`,如果读者环境中没有`snap`, 可自行安装,或提`Issue`
+
+```bash
+# --classic 使 Snap安装的应用有权限可以访问系统上的所有文件, 否则只能在应用自己的沙箱中运行
+sudo snap install kubectl --classic
+```
+
+> kubectl 1.29.3 from Canonical✓ installed
+
+### cli验证访问
+
+```bash
+kubectl cluster-info
+```
+
+> Kubernetes control plane is running at https://127.0.0.1:13026
+> CoreDNS is running at https://127.0.0.1:13026/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+>
+> To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+
+```bash
+kubectl get nodes
+```
+
+> NAME       STATUS   ROLES           AGE   VERSION
+> minikube   Ready    control-plane   24m   v1.28.3
+
+## 基本操作
+
+### Pod
+
+> - 使用kubectl创建一个简单的Pod。
+> - 查看正在运行的Pod列表。
+> - 删除一个Pod。
+
+在Kubernetes中，Pod是最基本的部署和调度单位，是Kubernetes中最小的可部署对象。
+
+一个Pod是一个或多个相关容器的组合，它们在同一个节点上运行并共享相同的上下文和网络命名空间。这些容器共享相同的IP地址和端口空间，并且可以通过localhost相互通信。Pod中的容器通常一起协同工作，共同完成某项特定任务，例如一个Web应用程序的前端和后端容器可以被组合在同一个Pod中。
+
+Pod并不是设计用来长期存在的，它们是临时性的，可以根据需要创建和销毁。如果需要长期运行的服务，通常会使用更高级的抽象，例如Deployment或StatefulSet，它们管理着一组Pod的生命周期，并提供了自动伸缩、滚动更新等功能(Deployment与Pod有点类似于:类与实例的关系)。
+
+### Deployment
+
+> - 创建一个Deployment。
+> - 查看Deployment状态和详情。
+> - 扩展或缩减Deployment的副本数量。
+
+
+
+### Service
+
+> - 创建一个Service。
+> - 查看Service状态和详情。
+> - 测试Service的可访问性。
+
+
+
+## 高级操作
+
+> - 创建和管理ConfigMap和Secrets。
+> - 探索Pod之间的网络通信。
+> - 配置网络策略。
+
+### Secrets
+
+### ConfigMap
+
+### 网络管理
+
+> - 理解Kubernetes中的网络模型。
+> - 探索Pod之间的网络通信。
+> - 配置网络策略。
+
+## 部署
+
+### Helm应用部署
+
+> - 安装和配置Helm。
+> - 使用Helm部署应用程序。
+
+### 应用监控&日志
+
+> - 安装和配置监控工具，如Prometheus和Grafana。
+> - 查看Pod的监控指标。
+> - 查看Pod的日志。
+
+
+
+## 清理
 
 
 
