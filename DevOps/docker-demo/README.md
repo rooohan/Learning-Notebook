@@ -534,6 +534,157 @@ kubectl get nodes
 
 ## 基本操作
 
+在开始教程前要先运行以下命令:
+```bash
+kubectl config use-context minikube
+```
+
+此时再运行`docker image ls`, 会发现如下输出, 且我们之前练习的`image` 都不见了,
+
+> REPOSITORY                                TAG       IMAGE ID       CREATED         SIZE
+> registry.k8s.io/kube-apiserver            v1.28.3   537434729123   6 months ago    126MB
+> registry.k8s.io/kube-controller-manager   v1.28.3   10baa1ca1706   6 months ago    122MB
+> registry.k8s.io/kube-scheduler            v1.28.3   6d1b4fd1b182   6 months ago    60.1MB
+> registry.k8s.io/kube-proxy                v1.28.3   bfc896cf80fb   6 months ago    73.1MB
+> registry.k8s.io/etcd                      3.5.9-0   73deb9a3f702   11 months ago   294MB
+> registry.k8s.io/coredns/coredns           v1.10.1   ead0a4a53df8   14 months ago   53.6MB
+> registry.k8s.io/pause                     3.9       e6f181688397   18 months ago   744kB
+> gcr.io/k8s-minikube/storage-provisioner   v5        6e38f40d628d   3 years ago     31.5MB
+
+所以我们要在当前context中重新`build`我们的image
+
+> 如果发现build报错,参阅此[解决方案](https://stackoverflow.com/questions/65896681/exec-docker-credential-desktop-exe-executable-file-not-found-in-path)
+
+### 创建Deployment
+
+在`./devops/k8s`中创建`fast-api-server-deployment.yaml`文件:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fast-api-server-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: fast-api-server
+  template:
+    metadata:
+      labels:
+        app: fast-api-server
+    spec:
+      containers:
+      - name: fast-api-server
+        image: fastapi-docker-image
+        imagePullPolicy: Never
+
+        ports:
+        - containerPort: 8000
+```
+
+运行
+
+```bash
+kubectl apply -f devops/k8s/fast-api-server-deployment.yaml
+```
+
+查看我们的deployment
+
+```bash
+kubectl get deployments
+```
+
+> NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
+> fast-api-server-deployment   3/3     3            3           40m
+
+### 创建Service
+
+在`./devops/k8s`中创建`fast-api-server-service.yaml`文件:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: fast-api-server-service
+spec:
+  selector:
+    app: fast-api-server
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: LoadBalancer
+```
+
+运行
+
+```bash
+kubectl apply -f devops/k8s/fast-api-server-service.yaml
+# service/fast-api-server-service created
+```
+
+查看状态
+
+```bash
+kubectl get services fast-api-server-service
+```
+
+> NAME                      TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
+> fast-api-server-service   LoadBalancer   10.101.24.65   <pending>     8000:30740/TCP   2m12s
+
+看到一直是`pending`状态
+
+### 运行Service
+
+运行下面命令后 服务成功启动!
+
+```bash
+minikube service fast-api-server-service
+```
+
+### 性能
+
+> Requests per second:    3750.02 [#/sec] (mean)
+> Time per request:       26.666 [ms] (mean)
+> Time per request:       0.267 [ms] (mean, across all concurrent requests)
+> Transfer rate:          549.32 [Kbytes/sec] received
+>
+> Connection Times (ms)
+>               min  mean[+/-sd] median   max
+> Connect:        0    0   0.3      0       2
+> Processing:     4   25  25.6     15      82
+> Waiting:        2   25  25.5     14      82
+> Total:          4   25  25.5     15      82
+>
+> Percentage of the requests served within a certain time (ms)
+>   50%     15
+>   66%     17
+>   75%     19
+>   80%     67
+>   90%     76
+>   95%     79
+>   98%     80
+>   99%     81
+>  100%     82 (longest request)
+
+### 停止服务
+
+删除Deployment，并且Kubernetes会自动停止和删除由该Deployment创建的所有Pods。
+
+```bash
+kubectl delete deployment fast-api-server-deployment
+kubectl delete service fast-api-server-service
+```
+
+删除Deployment是一个破坏性的操作，它会停止和删除所有由Deployment创建的Pods，并且这个操作是不可逆的。如果您只是暂时需要停止Deployment，那么您可能想要考虑将Deployment的副本数设置为0，而不是删除Deployment。您可以使用以下命令来将Deployment的副本数设置为0：
+
+```bash
+kubectl scale deployment fast-api-server-deployment --replicas=0
+```
+
+
+
 ### Pod
 
 > - 使用kubectl创建一个简单的Pod。
@@ -545,20 +696,6 @@ kubectl get nodes
 一个Pod是一个或多个相关容器的组合，它们在同一个节点上运行并共享相同的上下文和网络命名空间。这些容器共享相同的IP地址和端口空间，并且可以通过localhost相互通信。Pod中的容器通常一起协同工作，共同完成某项特定任务，例如一个Web应用程序的前端和后端容器可以被组合在同一个Pod中。
 
 Pod并不是设计用来长期存在的，它们是临时性的，可以根据需要创建和销毁。如果需要长期运行的服务，通常会使用更高级的抽象，例如Deployment或StatefulSet，它们管理着一组Pod的生命周期，并提供了自动伸缩、滚动更新等功能(Deployment与Pod有点类似于:类与实例的关系)。
-
-### Deployment
-
-> - 创建一个Deployment。
-> - 查看Deployment状态和详情。
-> - 扩展或缩减Deployment的副本数量。
-
-
-
-### Service
-
-> - 创建一个Service。
-> - 查看Service状态和详情。
-> - 测试Service的可访问性。
 
 
 
