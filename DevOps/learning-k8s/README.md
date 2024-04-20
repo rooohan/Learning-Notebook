@@ -88,9 +88,9 @@ kubectl 是 Kubernetes 的命令行工具，用于与 Kubernetes 集群进行交
 > minikube   Ready    control-plane   24m   v1.28.3
 # Quick Start
 
-1. 首先确保`minikube` 服务已启动, 如果没有请运行: `minikube start`
+1. 首先确保`minikube` 服务已启动, 如果没有请运行: `minikube start --container-runtime=docker --vm=true` [参考链接](https://minikube.sigs.k8s.io/docs/tutorials/docker_desktop_replacement/)
 
-2. 运行`kubectl config use-context minikube`, 命令设定`K8S`的上下文
+2. [可选步骤] 运行`kubectl config use-context minikube`, 命令设定`K8S`的上下文
 
    > 如有需要, 可使用`kubectl config use-context -` 切换至上一个上下文
 
@@ -265,3 +265,105 @@ kubectl 是 Kubernetes 的命令行工具，用于与 Kubernetes 集群进行交
    ```
 
    删除负载均衡器，并停止将流量路由到对应的`Deployment`
+   
+
+# Advanced
+
+## service互联
+
+因为我们的`fast-api-server`代码中的`redis`地址是支持从环境变量中获取并连接的, 所以我们可以很灵活的通过在`Deployment`的时候注入`redis`服务:
+
+1. 创建`redis`集群
+
+   - `redis-deployment.yaml`
+
+     ```yaml
+     apiVersion: apps/v1
+     kind: Deployment
+     metadata:
+       name: redis-deployment
+     spec:
+       replicas: 1
+       selector:
+         matchLabels:
+           app: redis
+       template:
+         metadata:
+           labels:
+             app: redis
+         spec:
+           containers:
+           - name: redis
+             image: redis:latest
+             ports:
+             - containerPort: 6379  # 端口号后面要用
+     ```
+
+   - `redis-service.yaml`
+
+     ```bash
+     apiVersion: v1
+     kind: Service
+     metadata:
+       name: redis-service  # 服务名后面要用
+     spec:
+       selector:
+         app: redis
+       ports:
+         - protocol: TCP
+           port: 6379
+           targetPort: 6379
+     ```
+
+     
+
+2. 添加环境变量值
+
+   在`fast-api-server-deployment.yaml`中添加`redis`服务的信息:
+
+   ```yaml
+   apiVersion: apps/v1
+   kind: Deployment
+   metadata:
+     name: fast-api-server-deployment
+   spec:
+     replicas: 3
+     selector:
+       matchLabels:
+         app: fast-api-server
+     template:
+       metadata:
+         labels:
+           app: fast-api-server
+       spec:
+         containers:
+         - name: fast-api-server
+           image: fastapi-docker-image
+           imagePullPolicy: Never
+   
+           ports:
+           - containerPort: 8000
+           env:   # 从这里开始为我们新增的
+           - name: REDIS_URL  # 与代码中的变量保持一致
+             value: redis://redis-service:6379 # 上面定义的
+   ```
+
+3. 启动服务
+
+   ```bash
+   # 记得启动fast-api-server 服务, 此处不再赘述
+   kubectl apply -f backend-demo/redis-deployment.yaml
+   kubectl apply -f backend-demo/redis-service.yaml
+   ```
+
+   
+
+
+
+   
+
+   
+
+   
+
+   
