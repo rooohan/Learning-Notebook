@@ -351,12 +351,149 @@ kubectl 是 Kubernetes 的命令行工具，用于与 Kubernetes 集群进行交
 3. 启动服务
 
    ```bash
-   # 记得启动fast-api-server 服务, 此处不再赘述
+   # 先启动fast-api-server服务
+   kubectl apply -f backend-demo/fast-api-server-deployment.yaml
+   kubectl apply -f backend-demo/fast-api-server-service.yaml
+   
    kubectl apply -f backend-demo/redis-deployment.yaml
    kubectl apply -f backend-demo/redis-service.yaml
    ```
 
+## Nginx反向代理
+
+1. yaml文件定义
+
+   - `deployment.yaml`
+
+     ```yaml
+     apiVersion: apps/v1
+     kind: Deployment
+     metadata:
+       name: nginx-deployment
+     spec:
+       replicas: 1
+       selector:
+         matchLabels:
+           app: nginx
+       template:
+         metadata:
+           labels:
+             app: nginx
+         spec:
+           containers:
+           - name: nginx
+             image: nginx:latest
+             ports:
+             - containerPort: 80
+             volumeMounts:
+             - name: config-volume
+               mountPath: /etc/nginx/nginx.conf
+               subPath: nginx.conf
+           volumes:
+           - name: config-volume
+             configMap:
+               name: nginx-config
+               items:  # 缺少这个项让我踩了一会儿坑
+                   - key: nginx.conf
+     
+     ```
+
+   - `nginx-service.yaml`
+
+     ```yaml
+     apiVersion: v1
+     kind: Service
+     metadata:
+       name: nginx-service
+     spec:
+       selector:
+         app: nginx
+       ports:
+         - protocol: TCP
+           port: 80
+           targetPort: 80
+     ```
+
+2. conf文件
+
+   在`./backend-demo`中新建`nginx.conf`
+
+   ```bash
+   events {
+       worker_connections 1024;
+   }
    
+   http {
+       server {
+           listen 80;
+   
+           location / {
+               proxy_pass http://fast-api-server-service:8000;
+               proxy_set_header Host $host;
+               proxy_set_header X-Real-IP $remote_addr;
+               proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+               proxy_set_header X-Forwarded-Proto $scheme;
+           }
+       }
+   }
+   ```
+
+3. 创建ConfigMap
+
+   ```bash
+   kubectl create configmap nginx-config --from-file=nginx.conf=./backend-demo/nginx.conf
+   
+   # 查看刚创建的configmap
+   kubectl describe configmap nginx-config
+   ```
+
+   - `nginx-config` 为 ConfigMap 对象的名称
+   - `nginx.conf` 为`ConfigMap` 对象的Key
+   - `./backend-demo/nginx.conf` 对应的文件是Key的值
+
+4. 部署并运行Nginx
+
+   ```bash
+   kubectl apply -f backend-demo/nginx-deployment.yaml
+   kubectl apply -f backend-demo/nginx-service.yaml
+   
+   minikube service nginx-service
+   ```
+
+5. 性能测试
+
+   运行`ab -n 1000 -c 100 {your-path}`
+
+   ```bash
+   Requests per second:    2282.18 [#/sec] (mean)
+   Time per request:       43.818 [ms] (mean)
+   Time per request:       0.438 [ms] (mean, across all concurrent requests)
+   Transfer rate:          387.79 [Kbytes/sec] received
+   
+   Connection Times (ms)
+                 min  mean[+/-sd] median   max
+   Connect:        0    0   0.2      0       1
+   Processing:     4   42  36.1     15      95
+   Waiting:        4   42  36.1     15      95
+   Total:          4   42  36.0     15      95
+   
+   Percentage of the requests served within a certain time (ms)
+     50%     15
+     66%     83
+     75%     85
+     80%     86
+     90%     88
+     95%     91
+     98%     93
+     99%     94
+    100%     95 (longest request)
+   ```
+
+   感觉我们上了这么多组件性能提升很小啊...
+
+## ConfigMap
+
+
 
 
 
