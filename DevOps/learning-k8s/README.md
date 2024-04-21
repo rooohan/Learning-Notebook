@@ -29,28 +29,30 @@ Kubernetes 提供了内建的服务发现机制，允许应用程序组件通过
    minikube start
    ```
 
-   > 😄  minikube v1.32.0 on Ubuntu 22.04 (amd64)
-   > ✨  Automatically selected the docker driver. Other choices: none, ssh
-   > 📌  Using Docker driver with root privileges
-   > ❗  For an improved experience it's recommended to use Docker Engine instead of Docker Desktop.
-   > Docker Engine installation instructions: https://docs.docker.com/engine/install/#server
-   > 👍  Starting control plane node minikube in cluster minikube
-   > 🚜  Pulling base image ...
-   > 💾  Downloading Kubernetes v1.28.3 preload ...
-   >     > preloaded-images-k8s-v18-v1...:  403.35 MiB / 403.35 MiB  100.00% 13.39 M
-   >     > gcr.io/k8s-minikube/kicbase...:  453.90 MiB / 453.90 MiB  100.00% 10.61 M
-   > 🔥  Creating docker container (CPUs=2, Memory=3400MB) ...
-   > 🐳  Preparing Kubernetes v1.28.3 on Docker 24.0.7 ...
-   >     ▪ Generating certificates and keys ...
-   >     ▪ Booting up control plane ...
-   >     ▪ Configuring RBAC rules ...
-   > 🔗  Configuring bridge CNI (Container Networking Interface) ...
-   > 🔎  Verifying Kubernetes components...
-   >     ▪ Using image gcr.io/k8s-minikube/storage-provisioner:v5
-   > 🌟  Enabled addons: storage-provisioner, default-storageclass
-   > 🏄  Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
-
-
+   ```bash
+   😄  minikube v1.32.0 on Ubuntu 22.04 (amd64)
+   ✨  Automatically selected the docker driver. Other choices: none, ssh
+   📌  Using Docker driver with root privileges
+   ❗  For an improved experience it's recommended to use Docker Engine instead of Docker Desktop.
+   Docker Engine installation instructions: https://docs.docker.com/engine/install/#server
+   👍  Starting control plane node minikube in cluster minikube
+   🚜  Pulling base image ...
+   💾  Downloading Kubernetes v1.28.3 preload ...
+       > preloaded-images-k8s-v18-v1...:  403.35 MiB / 403.35 MiB  100.00% 13.39 M
+       > gcr.io/k8s-minikube/kicbase...:  453.90 MiB / 453.90 MiB  100.00% 10.61 M
+   🔥  Creating docker container (CPUs=2, Memory=3400MB) ...
+   🐳  Preparing Kubernetes v1.28.3 on Docker 24.0.7 ...
+       ▪ Generating certificates and keys ...
+       ▪ Booting up control plane ...
+       ▪ Configuring RBAC rules ...
+   🔗  Configuring bridge CNI (Container Networking Interface) ...
+   🔎  Verifying Kubernetes components...
+       ▪ Using image gcr.io/k8s-minikube/storage-provisioner:v5
+   🌟  Enabled addons: storage-provisioner, default-storageclass
+   🏄  Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
+   ```
+   
+   
 
 ## kubectl
 
@@ -219,30 +221,30 @@ kubectl 是 Kubernetes 的命令行工具，用于与 Kubernetes 集群进行交
 
 ## 性能测试
 
+```bash
+Requests per second:    3750.02 [#/sec] (mean)
+Time per request:       26.666 [ms] (mean)
+Time per request:       0.267 [ms] (mean, across all concurrent requests)
+Transfer rate:          549.32 [Kbytes/sec] received
 
+Connection Times (ms)
+        min  mean[+/-sd] median   max
+Connect:        0    0   0.3      0       2
+Processing:     4   25  25.6     15      82
+Waiting:        2   25  25.5     14      82
+Total:          4   25  25.5     15      82
 
-> Requests per second:    3750.02 [#/sec] (mean)
-> Time per request:       26.666 [ms] (mean)
-> Time per request:       0.267 [ms] (mean, across all concurrent requests)
-> Transfer rate:          549.32 [Kbytes/sec] received
->
-> Connection Times (ms)
->            min  mean[+/-sd] median   max
-> Connect:        0    0   0.3      0       2
-> Processing:     4   25  25.6     15      82
-> Waiting:        2   25  25.5     14      82
-> Total:          4   25  25.5     15      82
->
-> Percentage of the requests served within a certain time (ms)
-> 50%     15
-> 66%     17
-> 75%     19
-> 80%     67
-> 90%     76
-> 95%     79
-> 98%     80
-> 99%     81
-> 100%     82 (longest request)
+Percentage of the requests served within a certain time (ms)
+50%     15
+66%     17
+75%     19
+80%     67
+90%     76
+95%     79
+98%     80
+99%     81
+100%     82 (longest request)
+```
 
 ## 停止服务
 
@@ -395,6 +397,7 @@ kubectl 是 Kubernetes 的命令行工具，用于与 Kubernetes 集群进行交
                name: nginx-config
                items:  # 缺少这个项让我踩了一会儿坑
                    - key: nginx.conf
+                     path: nginx.conf
      
      ```
 
@@ -490,6 +493,8 @@ kubectl 是 Kubernetes 的命令行工具，用于与 Kubernetes 集群进行交
    ```
 
    感觉我们上了这么多组件性能提升很小啊...
+
+   实测直接call fastapi后端的`RPS`要比 `nginx`的高, 应该是我们业务内容太简单导致的.
 
 ## ConfigMap
 
