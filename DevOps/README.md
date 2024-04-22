@@ -28,7 +28,7 @@
    sudo apt update && sudo apt upgrade
    ```
 
-4. 安装python：
+4. [可选] 安装python：
 
    > 注意此处安装的Python是win系统下
 
@@ -42,13 +42,29 @@
 
 1. 安装[Poetry](https://python-poetry.org/docs/#installing-with-pipx)
 
-   1. 安装[pipx](https://github.com/pypa/pipx): `scoop install pipx`; `pipx ensurepath`
+   1. 安装[pipx](https://github.com/pypa/pipx)
 
-   ```bash
-   pipx install poetry
-   pipx ensurepath  # 将poetry添加到环境变量中
-   poetry completions bash >> ~/.bash_completion # 可选 代码补全
-   ```
+      ```bash
+      scoop install pipx
+      pipx ensurepath
+      ```
+
+   2. 安装Poetry
+
+      ```bash
+      pipx install poetry
+      pipx ensurepath  # 将poetry添加到环境变量中
+      poetry completions bash >> ~/.bash_completion # 可选 代码补全
+      ```
+
+   3. [可选]自定义Poetry
+
+      ```bash
+      # 虚拟环境安装在 当前项目中
+      poetry config virtualenvs.in-project true	
+      ```
+
+   
 
 2. 安装[pre-commit](https://pre-commit.com/)
 
