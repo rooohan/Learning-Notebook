@@ -8,6 +8,8 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 localstack = "^3.3.0"
+awscli-local = "^0.22.0"
+awscli = "^1.32.90"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.7.0"
