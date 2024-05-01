@@ -67,6 +67,61 @@
 
 
 
+# 玩家
+
+> - **使用Pawn**：
+>   - 当你需要一个非常简单的游戏对象，不需要角色模型或动画时，可以使用Pawn。
+>   - 当你需要自定义控制逻辑，比如飞行器、无人机、地面车辆等。
+>   - 当你需要与玩家角色具有相同的控制能力，但没有生命值或动画时。
+> - **使用Character**：
+>   - 当你需要一个具有动画和模型的角色时，使用Character更为合适。
+>   - 当你需要一个具有基本生命系统、碰撞体积以及默认的输入和移动逻辑的角色时。
+>   - 当你需要一个玩家角色或有生命体现的游戏对象时，使用Character更为合适。
+
+## Pawn
+
+1. 创建一个继承自`Pawn`的蓝图
+2. 在`DefaultSceneRoot`上`attach`一个`StaticMesh`, 作为第三人称时看到的模型
+3. 在`DefaultSceneRoot`上`attach`一个`SpringArm`
+   - `SpringArm`: 弹簧臂, 可以在第三人称视角下,当镜头与`DefaultSceneRoot`之间有障碍物的时候, 可以拉近镜头.
+   - `Target Arm Length`: 设置`Camera`的距离
+4. 在`SpringArm`上`attach`一个`Camera`
+5. 将`GameModel`蓝图类的`Default Pawn Class` 设置为我们上面创建的蓝图类.
+
+## Character
+
+> `Capsule`检测碰撞
+>
+> `Arrow`前进方向
+>
+> `Mesh` 装载骨骼网络
+
+1. 创建一个继承自`Character`的蓝图
+2. 其他操作类似于`Pawn`
+
+## Controller
+
+### Speech Mappings
+
+> Edid -> Project Settings -> Engine -> Input
+
+要设定这个原因是因为, 如果我们直接在`PlayController`的蓝图 添加某些按键的事件的话, 角色的功能就会跟输入键绑死, 玩家就不能自定义按键了, 所以我们要先创建一个指令map
+
+### 步骤
+
+1. 创建一个继承自`PlayController`的蓝图
+2. 实现具体的功能, 并关联对应的指令map集中的具体指令
+3. 在`GameModel`蓝图类中将`Play Controller Class`改成自定义的`Controller`类
+
+- `get player character`: `Controller`不能直接访问一些来自角色类才能访问的函数,比如`jump`, 此时要先获取角色
+
+  > 我们还经常会用到一个方法叫`Cast to BP ThiredPerson Character`方法, 这两个的区别是:
+  >
+  > - `get player character` 获取的是`character`类(父类)
+  > - `Cast to BP ThiredPerson Character` 获取的是我们自定义的`Character`类(具体的子类)
+  >
+  > 所以要访问common的函数时`get player character`就够了, 而`Cast to BP ThiredPerson Character`  是在获取一些我们自定义类属性的时候会用到的.
+
 
 
 # UI

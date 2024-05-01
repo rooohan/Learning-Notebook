@@ -1,5 +1,11 @@
 # API
 
+## Light
+
+- `Toggle Visibility` : 开启关闭光源
+
+
+
 ## Time
 
 ### TimeLine
