@@ -20,7 +20,20 @@
         - Parent Socket： `HatSocket`
 5. 在BP_ThirdPersion 中添加SM：
    1.  在BP_ThirdPersion绑定的Mesh属性中找到角色网格
-   2.  在股价的head中增加一个Socket:  `HatSocket`
+   2.  在骨架的head中增加一个Socket:  `HatSocket`
+
+## 门
+
+1. 继承于`StaticMeshAction`类创建`BP`, 并`Attach`上门的`SM`和门框的`SM`
+2. 设置一个变量`InitialDoorRotation`, 并在`Event BeginPlay`的时候,通过`Get Actor Rotation`获取`SM`的位置并赋值给`InitialDoorRotation`
+3. `Add Custom Event`创建开门事件: 
+   1. 创建一个开始关键帧是(0,1), 结束关键帧是`(1,90)`的`TimeLine`
+   2. 将`InitialDoorRotation`通过`Break Rotation`打散成`X, Y, Z`:
+      - X 保持不变
+      - Y 保持不变
+      - Z 通过`substract` 函数减去`TimeLine`的输出值, 并输出新的 Z
+   3. `Set Action Rotation`  的`New Rotation`引脚, 通过`Make Rotation` 接收上一步骤的`X, Y, Z`
+4. 设定触发逻辑, 比如检测到重叠事件的时候, 使角色的输入可用, 并在按对应的键以后 call  步骤3中的开门事件
 
 
 
@@ -45,7 +58,7 @@
 
 
 
-## 抽象类设计
+# 抽象类设计
 
 1. 用`Enum`类, 定义一些不同`Type`的类型
 
@@ -123,6 +136,27 @@
   > 所以要访问common的函数时`get player character`就够了, 而`Cast to BP ThiredPerson Character`  是在获取一些我们自定义类属性的时候会用到的.
 
 
+
+# 敌人
+
+要创建一个在一个起始点A, 和终止点B之间游荡的敌人可以这样设计:
+
+1. 基于`Pawn`蓝图类创建一个类, 并`attach`上`SM`
+
+2. 创建一个`Vector`变量`EndPoint`(用作B点), 并在属性中设置`可编辑实例`和`可显示控件`
+
+3. 创建一个时间轴:
+
+   - 选中`使用最后一个关键帧`, `自动播放` 和`循环`
+   - 创建三个关键帧,并将头尾关键帧的值设为`0`, 第二个设为`1`. (时间轴的总长度/2 代表敌人从A到B共计要花费的时间)
+
+4. 将时间轴的输出值连接到`Lerp(Vector)`的`Alpha`端点
+
+   > 在此处的用处为:生成一系列连续的向量,其开始值为相对于`self`的`[0,0,0]`(即`lerp`函数的`A`端点值), 在经过一秒后插值生成至相对于`self`的B点的位置向量, 再经过一秒后插值生成至`self`的`[0,0,0]`
+
+5. 将`EndPoint`的值链接到`Lerp(Vector)`的`B`端点上
+
+6. 将`Lerp(Vector)`的`Return Value` 的值连接至`Set Relative Location`的`New Location`上
 
 # UI
 
