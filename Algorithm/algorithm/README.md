@@ -6,7 +6,7 @@
    poetry install
    ```
 
-2. 配置插件
+2. 安装插件
 
    ```bash
    jupyter contrib nbextension install --user
@@ -18,7 +18,11 @@
    jupyter notebook
    ```
 
-4. Done
+4. 配置插件
+
+   1. 选择`nbextension`Tab
+   2. 取消勾选`disable configuration`
+   3. 勾选`Hintland`
 
 # Jupyter
 
