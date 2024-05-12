@@ -38,6 +38,32 @@
 
 ##### Type Check
 
+> 最终生成的配置文件如下:
+>
+> ```json
+> {
+>     "workbench.colorTheme": "Default Dark Modern",
+>     "git.confirmSync": false,
+>     "python.languageServer": "Pylance",
+>     "files.autoSave": "afterDelay",
+>     "debug.disassemblyView.showSourceCode": false,
+>     "python.analysis.inlayHints.variableTypes": true,
+>     "python.analysis.typeCheckingMode": "standard",
+>     "python.analysis.ignore": [
+>         "/usr/lib/python3.10/**"
+>     ],
+>     "python.terminal.launchArgs": [
+> 
+>     ],
+>     "python.analysis.inlayHints.functionReturnTypes": true,
+>     "python.analysis.exclude": [
+>         "/usr/lib/python3.10/**"
+>     ],
+>     "python.analysis.autoImportCompletions": true,
+>     "cSpell.spellCheckOnlyWorkspaceFiles": true,
+> }
+> ```
+
 **语法检查**(Nice to have)
 
 1. 点击左下角的设置齿轮选择`settings`, 或使用快捷键`ctrl + ,`
@@ -67,6 +93,5 @@
 
 1. `Extentsion`中搜索`Code Spell Checker`
 2. `ctrl + ,`搜索`@id:cSpell.spellCheckOnlyWorkspaceFiles`勾选
-3. 搜索`cSpell.ignorePaths`添加python虚拟环境所在的路径(同上)
 
 > `Extentsion`中安装的检验插件, 对`.gitignore`中的文件是默认不检查的
